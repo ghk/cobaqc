@@ -1,0 +1,388 @@
+<!doctype html>
+<head>
+<title>Coba Quick Count</title>
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Open%20Sans:400,600,700italic,900,400italic,300" rel="stylesheet">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<style>
+h2, .h2 {
+    font-size: 36px;
+}
+.title {
+    font-size: 24px;
+    margin-top: 12px;
+}
+.help-block {
+    color: #eeeeee;
+    font-size: smaller;
+}
+.subtitle {
+    margin-left: 20px;
+    font-size: 16px;
+    font-style: italic;
+}
+.navbar-default {
+    padding-top: 5px;
+    background-color: rgba(10, 10, 10, 0.9);
+    border-color: rgba(10, 10, 10, 0.9);
+    color: #ffffff;
+}
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: Open Sans,Source Sans Pro,Helvetica,Arial,sans-serif;
+    font-weight: 300;
+    line-height: 1.3;
+}
+table.table-detail > thead > tr > th, table.table-detail > tbody > tr > td {
+    vertical-align: middle !important;
+    text-align: center !important;
+}
+body {
+    font-family: Open Sans,Source Sans Pro,Helvetica,Arial,sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+    background: none repeat scroll 0 0 #FFFFFF;
+    color: #333333;   
+}
+.sidebar {
+    background: none repeat scroll 0 0 #4BAAD3;
+    color: #ffffff;
+    padding-bottom: 20px;
+}
+.content, .sidebar {
+    padding-top: 70px;
+}
+
+html, body, .container-fluid, .row {
+    height: 100%;
+}
+
+@media (min-width: 992px) {
+  .sidebar {
+      height: 100%;
+  }
+  .content {
+      height: 100%;
+      overflow: auto;
+  }
+
+}
+
+
+</style>
+<script type="text/javascript">
+    function percent(x, total){
+        return (x * 100 / total);
+    }
+    function fn(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+    function fp(x) {
+        return x.toFixed(2).toString().replace(".", ",");
+    }
+    var total_prabowo = 60725131;
+    var total_jokowi = 67978749;
+    var total_tps = 464506;
+    var total_prabowo_percent = percent(total_prabowo, total_prabowo+total_jokowi);
+    var total_jokowi_percent = percent(total_jokowi, total_prabowo+total_jokowi);
+    function prefix_padd(num, cnt) {
+      num = num + '';
+      while (num.length < cnt) num = '0' + num;
+      return num;
+    }
+
+    function image_filename(p, t, h) {
+      return "http://scanc1.kpu.go.id/viewp.php?f="+prefix_padd(p, 7) + prefix_padd(t, 3) + prefix_padd(h, 2)+".jpg";
+    }
+
+    $(function(){
+            $(".total-prabowo" ).html(fn(total_prabowo));
+            $(".total-jokowi").html(fn(total_jokowi));
+            $(".total-prabowo-percent").html(fp(total_prabowo_percent));
+            $(".total-jokowi-percent").html(fp(total_jokowi_percent));
+            $(".total-tps").html(fn(total_tps));
+
+            var result_template = $("#result-template").html();
+            var tps_template = $("#tps-template").html();
+            results = {}
+            function page(type){
+                $("#home").hide();
+                $("#results").hide();
+                $("#result-detail").hide();
+                $("#"+type).show();
+            }
+            function showHelp(){
+                $(".help-type-0").hide();
+                $(".help-type-1").hide();
+                $(".help-type-2").hide();
+                var type = $("[name='sample_type']").val();
+                $(".help-type-"+type).show();
+            }
+            showHelp();
+            $("[name='sample_type']").change(showHelp);
+            function showResult(result, index){
+                results[index] = result;
+                var prabowo = percent(result.prabowo, result.prabowo + result.jokowi);
+                var jokowi = percent(result.jokowi, result.prabowo + result.jokowi);
+                var error = Math.abs(jokowi - total_jokowi_percent);
+                var $result = $(result_template)
+                $(".index", $result).html(index);
+                $(".show-detail", $result).attr("data-result-id", index);
+                $(".jokowi", $result).html(fp(jokowi));
+                $(".prabowo", $result).html(fp(prabowo));
+                $(".error", $result).html(fp(error));
+                $(".table-qc tbody").append($result);
+            }
+            function getResult(type, count, index){
+                $.getJSON("/result/"+type+"/"+count, function(result){
+                    showResult(result, index);
+                });
+            }
+            $("#results").delegate(".show-detail", "click", function(e){
+                e.preventDefault();
+                e.stopPropagation();
+                page("result-detail");
+                var index = parseInt($(this).attr("data-result-id"));
+                var result = results[index];
+                var prabowo = percent(result.prabowo, result.prabowo + result.jokowi);
+                var jokowi = percent(result.jokowi, result.prabowo + result.jokowi);
+                $(".qc-index").html(index);
+                $(".prabowo-count").html(fn(result.prabowo));
+                $(".jokowi-count").html(fn(result.jokowi));
+                $(".prabowo-percent").html(fp(prabowo));
+                $(".jokowi-percent").html(fp(jokowi));
+                $(".tps-count").html(fn(result.used.length));
+                $(".table-tps tbody").html("");
+                $tbody = $("<tbody></tbody");
+                for(var i = 0; i < result.used.length; i++){
+                    var tps = result.used[i];
+                    var $tps = $(tps_template)
+                    var location = tps.province.name + " > " + tps.kabupaten.name + " > " + tps.kecamatan.name + " > " + tps.kelurahan.name;
+                    $(".location", $tps).html(location);
+                    $(".number", $tps).html(tps.index);
+                    $(".prabowo", $tps).html(tps.values[1]);
+                    $(".jokowi", $tps).html(tps.values[2]);
+                    $(".c1 a", $tps).attr("href", image_filename(tps.kelurahan.id, tps.index, 4));
+                    $tbody.append($tps);
+                }
+                $(".table-tps tbody").replaceWith($tbody);
+                return false;
+            });
+            $(".action-back").click(function(){
+                page("results");
+                return false;
+            });
+            $(".qc-form").submit(function(e){
+                e.preventDefault();
+                e.stopPropagation();
+                $(".table-qc tbody").html("");
+                page("results");
+                results = {}
+                var type = $("[name='sample_type']", this).val();
+                var count = $("[name='sample_count']", this).val();
+                var qc_count = $("[name='qc_count']", this).val();
+                for(var i = 0; i < qc_count; i++){
+                    getResult(type, count, i+1);
+                }
+                return false;
+            });
+    });
+</script>
+</head>
+<body>
+<nav class="navbar navbar-fixed-top navbar-default" role="navigation">
+    <div class="container-fluid">
+      <div class="row">
+         <div class="col-md-12">
+             <span class="title"><i class="fa fa-bar-chart-o"></i> Coba Quick Count</span>
+            <span class="subtitle">
+                Dan pahami aplikasi ilmu statistik untuk demokrasi
+            </span>
+         </div>
+     </div>
+    </div>
+</nav>
+<div class="container-fluid" style="height: 100%;">
+  <div class="row" style="height: 100%;">
+     <div class="col-md-3 sidebar">
+        <form class="qc-form" role="form">
+          <div class="form-group">
+            <label for="type">Coba Quick Count dengan</label>
+            <div class="input-group">
+                <input name="sample_count" type="number" class="form-control" value="2000"/>
+                <span class="input-group-addon">TPS</span>
+            </div>
+
+          </div>
+          <div class="form-group">
+            <label for="exampleInputFile">Lakukan sejumlah</label>
+            <div class="input-group">
+                <input name="qc_count" type="number" class="form-control" value="20"/>
+                <span class="input-group-addon">Percobaan</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="type">Acak TPS secara </label>
+            <select name="sample_type" class="form-control">
+                <option value="0">Kabupaten</option>
+                <option value="1">Provinsi</option>
+                <option value="2">Nasional</option>
+            </select>
+            <p class="help-block">
+            <span class="help-type-0" style="display: none;">
+                Jika diacak secara Kabupaten, maka setiap kabupaten akan dipilih sejumlah TPS yang sebanding dengan rasio jumlah TPS terhadap jumlah TPS di Nasional.
+                <br />
+                Sebagai contoh, Kabupaten Bekasi mempunyai 4003 TPS, Total TPS sebanyak <span class="total-tps"></span> TPS, dan Quick Count dilakukan dengan memilih 2000 TPS, maka dalam Quick Count ini akan dipilih 
+                <br />
+                <code>4003 X 2000 / <span class="total-tps"></span> = 17</code> TPS secara acak.
+            </span>
+            <span class="help-type-1" style="display: none;">
+                Jika diacak secara Provinsi, maka setiap provinsi akan dipilih sejumlah TPS yang sebanding dengan rasio jumlah TPS terhadap jumlah TPS di Nasional.
+                <br />
+                Sebagai contoh, Provinsi DKI Jakarta mempunyai 12408 TPS, Total TPS sebanyak <span class="total-tps"></span> TPS, dan Quick Count dilakukan dengan memilih 2000 TPS, maka dalam Quick Count ini akan dipilih 
+                <br />
+                <code>12408 X 2000 / <span class="total-tps"></span> = 53</code> TPS secara acak.
+            </span>
+            <span class="help-type-2" style="display: none;">
+                Jika diacak secara Nasional, maka TPS akan dipilih secara acak tanpa memperhatikan Kabupaten atau Provinsi TPS tersebut.
+            </span>
+            </p>
+          </div>
+          <br />
+          <button type="submit" class="btn btn-default"><i class="fa fa-play"></i> &nbsp;Jalankan Quick Count</button>
+        </form>
+     </div>
+     <div class="content col-md-9">
+         <div id="home">
+            <p>Pernah punya pertanyaan seperti ini?</p>
+            <blockquote>
+                <p><i class="fa fa-quote-right"></i> TPS di Indonesia tidak homogen dan hitung cepat / quick count tidak tepat</p>
+            </blockquote>
+            <blockquote>
+                <p><i class="fa fa-quote-right"></i> Quick Count hanya menghitung 2.000 TPS sedangkan Real Count 500.000 TPS</p>
+            </blockquote>
+            <hr style="margin-top: 40px;" />
+            <p style="font-size: 36px;">Kenapa tidak coba lakukan quick count sendiri?</p>
+            <p style="font-style: italic;">di situs ini, kamu bisa mencoba melakukan quick count dengan mudah</p>
+            <br />
+             <p>
+             Di situs ini, kamu bisa melakukan quick count dengan mengambil sejumlah sampel data TPS dari <span class="total-tps"></span> data TPS yang berasal dari <a href="http://kawalpemilu.org">kawalpemilu.org</a>
+            </p>
+             <p>
+             Tinggal isi parameter-parameter form di kanan situs ini, klik "Jalankan Quick Count", dan tadaaa, kamu bisa melihat hasil quick count kamu.
+            </p>
+            <hr style="margin-top: 40px;" />
+            <p>
+            <a href="https://www.facebook.com/notes/merlyna-lim/apa-benar-kita-harus-tunggu-kpu-saja-menyoal-real-count-official-count-dan-quick/10152360323280829">Baca artikel ini untuk mengerti kenapa quick count dibutuhkan</a>
+            </p>
+            <p>
+            Source code aplikasi ini bisa didownload di <a href="http://www.github.com/ghk/cobaqc">sini</a>
+            </p>
+            <p>
+            Punya saran? bisa email ke <code>admin (at) microvac.co.id</code>
+            </p>
+         </div>
+         <div id="results" style="display: none;">
+             <p>Total data dari <a href="http://kawalpemilu.org">kawalpemilu.org</a></p>
+             <table class="table table-striped table-condensed table-hover">
+                 <thead>
+                     <tr>
+                         <th>Prabowo</th>
+                         <th>Prabowo (%)</th>
+                         <th>Jokowi</th>
+                         <th>Jokowi (%)</th>
+                         <th>Total TPS</th>
+                     </tr>
+                 </thead>
+                 <tbody>
+                    <tr>
+                        <td class="total-prabowo"></td>
+                        <td class="total-prabowo-percent"></td>
+                        <td class="total-jokowi"></td>
+                        <td class="total-jokowi-percent"></td>
+                        <td class="total-tps"></td>
+                    </tr>
+                 </tbody>
+             </table>
+             <hr style="margin-top: 10px;"/>
+             <p>Hasil Percobaan Quick Count</p>
+             <table class="table table-qc table-striped table-condensed table-hover">
+                 <thead>
+                     <tr>
+                         <th>Percobaan Ke</th>
+                         <th>Prabowo (%)</th>
+                         <th>Jokowi (%)</th>
+                         <th>Error (%)</th>
+                         <th>Detail</th>
+                     </tr>
+                 </thead>
+                 <tbody>
+                 </tbody>
+             </table>
+         </div>
+         <div id="result-detail" style="display: none;">
+             <p>Percobaan ke <span class="qc-index"></span>
+             <a href="#" class="action-back btn btn-default" style="margin-left: 20px;">Kembali Ke Daftar Hasil Percobaan Quick Count</a> 
+             </p>
+             <table class="table table-detail table-bordered table-striped table-condensed table-hover">
+                 <thead>
+                     <tr>
+                         <th colspan=2>Prabowo</th>
+                         <th colspan=2>Jokowi</th>
+                         <th rowspan=2>Jumlah TPS Terpilih</th>
+                     </tr>
+                     <tr>
+                         <th>Jumlah</th>
+                         <th>%</th>
+                         <th>Jumlah</th>
+                         <th>%</th>
+                     </tr>
+                 </thead>
+                 <tbody>
+                    <tr>
+                        <td class="prabowo-count"></td>
+                        <td class="prabowo-percent"></td>
+                        <td class="jokowi-count"></td>
+                        <td class="jokowi-percent"></td>
+                        <td class="tps-count"></td>
+                    </tr>
+                 </tbody>
+             </table>
+             <hr style="margin-top: 10px;"/>
+             <p>Sampel TPS yang terpilih secara acak</p>
+             <table class="table table-tps table-striped table-condensed table-hover">
+                 <thead>
+                     <tr>
+                         <th>Lokasi</th>
+                         <th>TPS</th>
+                         <th>Prabowo</th>
+                         <th>Jokowi</th>
+                         <th style="width: 100px;">Scan C1</th>
+                     </tr>
+                 </thead>
+                 <tbody>
+                 </tbody>
+             </table>
+         </div>
+     </div>
+  </div>
+</div> 
+<script type="text/template" id="result-template">
+    <tr>
+        <td class="index"></td>
+        <td class="prabowo"></td>
+        <td class="jokowi"></td>
+        <td class="error"></td>
+        <td><a data-result-id="" href="#" class="show-detail">Lihat Detail</a></td>
+    </tr>
+</script>
+<script type="text/template" id="tps-template">
+    <tr>
+        <td class="location"></td>
+        <td class="number"></td>
+        <td class="prabowo"></td>
+        <td class="jokowi"></td>
+        <td class="c1"><a href="#" target="_blank">Lihat C1</a></td>
+    </tr>
+</script>
+</body>
