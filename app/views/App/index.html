@@ -159,12 +159,12 @@ html, body, .container-fluid, .row {
                 for(var i = 0; i < result.used.length; i++){
                     var tps = result.used[i];
                     var $tps = $(tps_template)
-                    var location = tps.province.name + " > " + tps.kabupaten.name + " > " + tps.kecamatan.name + " > " + tps.kelurahan.name;
+                    var location = tps.location;
                     $(".location", $tps).html(location);
                     $(".number", $tps).html(tps.index);
-                    $(".prabowo", $tps).html(tps.values[1]);
-                    $(".jokowi", $tps).html(tps.values[2]);
-                    $(".c1 a", $tps).attr("href", image_filename(tps.kelurahan.id, tps.index, 4));
+                    $(".prabowo", $tps).html(tps.prabowo);
+                    $(".jokowi", $tps).html(tps.jokowi);
+                    $(".c1 a", $tps).attr("href", image_filename(tps.kelurahan_id, tps.index, 4));
                     $tbody.append($tps);
                 }
                 $(".table-tps tbody").replaceWith($tbody);

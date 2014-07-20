@@ -1,11 +1,9 @@
 Source Code dari cobaqc.org
-Ditulis dalam python
+Ditulis dalam golang
 
-Cara Menjalankan
+Prerequisites
 ----------------
-Install flask ```pip install flask```
-Jalankan ```python cobaqc.py```
-Buka ```http://localhost:5000```
+Revel
 
 
 Lisensi: GPL
