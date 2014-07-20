@@ -136,7 +136,7 @@ html, body, .container-fluid, .row {
                 $(".table-qc tbody").append($result);
             }
             function getResult(type, count, index){
-                $.getJSON("/result/"+type+"/"+count, function(result){
+                $.getJSON("/result/"+type+"/"+count+"?"+new Date().getTime(), function(result){
                     showResult(result, index);
                 });
             }
