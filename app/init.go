@@ -106,7 +106,7 @@ func InitTPS() {
                 raw := tps_raw.([]interface{})
                 TotalTPS += 1
                 tps := TPS{}
-                tps.Index = int(i)
+                tps.Index = int(i)+1
                 tps.Location = province[2].(string) + " > " + kab[2].(string) + " > " + kec[2].(string) + " > " + d[2].(string) 
                 tps.Kelurahan_id = int(d[0].(float64))
                 tps.Prabowo = int(raw[1].(float64))
